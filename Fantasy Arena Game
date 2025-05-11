@@ -1,0 +1,699 @@
+#include<iostream>
+#include<string>
+#include<ctime>
+
+#pragma warning(disable : 4996);
+
+using namespace std;
+
+class Character {
+public:
+    string name;
+    int level;
+    int health;
+    int attack;
+    int defense;
+    bool hasAppliedBuffs;
+
+    Character(string n, int l, int h, int a, int d) : name(n), level(l),
+        health((h < 0) ? 0 : h), attack((a < 0) ? 0 : a),
+        defense((d < 0) ? 0 : d), hasAppliedBuffs(false) {}
+
+    virtual ~Character() {}
+
+    // Setters 
+    void setname(string n) { name = n; }
+    void setlevel(int l) { level = (l < 0) ? 0 : l; }
+    void sethealth(int h) { health = (h < 0) ? 0 : h; }
+    void setattack(int a) { attack = (a < 0) ? 0 : a; }
+    void setdefense(int d) { defense = (d < 0) ? 0 : d; }
+
+    // Getters
+    string getname() { return name; }
+    int getlevel() { return level; }
+    int gethealth() { return health; }
+    int getattack() { return attack; }
+    int getdefense() { return defense; }
+
+    virtual void attackTarget(Character&) = 0;
+    virtual void useSpecialAbility() = 0;
+
+    void printStats() {
+        cout << "----Stats----" << endl;
+        cout << "Name: " << name << endl;
+        cout << "Level: " << level << endl;
+        cout << "Health: " << health << endl;
+        cout << "Attack: " << attack << endl;
+        cout << "Defense: " << defense << endl;
+    }
+
+    void resetBuffs() {
+        hasAppliedBuffs = false;
+    }
+
+    // Operator overloading
+    // +
+
+    friend int operator+(const Character& c1, const Character& c2) {
+        return c1.attack + c2.attack;
+    }
+
+    // == operator to compare two characters 
+    friend bool operator==(const Character& c1, const Character& c2) {
+        int power1 = c1.health + c1.attack + c1.defense + (c1.level * 10);
+        int power2 = c2.health + c2.attack + c2.defense + (c2.level * 10);
+        return power1 == power2;
+    }
+
+    // << operator to print detailed character stats using ostream
+    friend ostream& operator<<(ostream& os, const Character& c) {
+        os << "Character: " << c.name << endl;
+        os << "Level: " << c.level << endl;
+        os << "Health: " << c.health << endl;
+        os << "Attack: " << c.attack << endl;
+        os << "Defense: " << c.defense << endl;
+        os << "Total Power: " << (c.health + c.attack + c.defense + (c.level * 10)) << endl;
+        return os;
+    }
+};
+
+class Warrior : public Character {
+    int abilitycount;
+public:
+    Warrior(string n, int l, int h, int a, int d) : Character(n, l, h, a, d), abilitycount(3) {}
+
+    void attackTarget(Character& target) override {
+        cout << "Warrior attacks and reduces the health by 30" << endl;
+
+        int targethealth = target.gethealth();
+        targethealth -= 30;
+
+        if (targethealth < 0) targethealth = 0;
+
+        if (targethealth == 0) {
+            cout << target.getname() << " has been defeated!" << endl;
+            target.sethealth(0);
+        }
+        else {
+            target.sethealth(targethealth);
+        }
+    }
+
+    void useSpecialAbility() override {
+        if (abilitycount > 0) {
+            cout << "The Special Ability for the Warrior is that it doubles the attack for one turn!" << endl;
+            attack = attack * 2;
+            abilitycount--;
+        }
+        else {
+            cout << "Ability count exceeded cannot be used further (3 times allowed)!" << endl;
+        }
+    }
+};
+
+class Mage : public Character {
+    bool ability;
+    int abilitycount;
+public:
+    Mage(string n, int l, int h, int a, int d) : Character(n, l, h, a, d), ability(false), abilitycount(3) {}
+
+    void attackTarget(Character& target) override {
+        cout << "Mage attacks and reduces the health by 50" << endl;
+
+        int targethealth = target.gethealth();
+        targethealth -= 50;
+
+        if (ability) {
+            defense = defense - 40;
+            ability = false;
+        }
+
+        if (targethealth < 0) targethealth = 0;
+
+        if (targethealth <= 0) {
+            cout << target.getname() << " has been defeated!" << endl;
+            target.sethealth(0);
+        }
+        else {
+            target.sethealth(targethealth);
+        }
+    }
+
+    void useSpecialAbility() override {
+        if (abilitycount > 0) {
+            cout << "The Special Ability for the Mage is that it increases the defense and heals!" << endl;
+            defense += 40;
+            health += 20;
+            ability = true;
+            abilitycount--;
+        }
+        else {
+            cout << "Ability count exceeded, cannot be used further (3 times allowed)!" << endl;
+        }
+    }
+};
+
+class Archer : public Character {
+    bool ability;
+    int abilitycount;
+public:
+    Archer(string n, int l, int h, int a, int d) : Character(n, l, h, a, d), ability(false), abilitycount(3) {}
+
+    void attackTarget(Character& target) override {
+        cout << "Archer attacks and reduces the health by 70" << endl;
+
+        int targethealth = target.gethealth();
+        targethealth -= 70;
+
+        if (ability) {
+            targethealth -= 140;
+            ability = false;
+        }
+        if (targethealth < 0) targethealth = 0;
+
+        if (targethealth <= 0) {
+            cout << target.getname() << " has been defeated!" << endl;
+            target.sethealth(0);
+        }
+        else {
+            target.sethealth(targethealth);
+        }
+    }
+
+    void useSpecialAbility() override {
+        if (abilitycount > 0) {
+            cout << "The Special Ability for the Archer is that it creates a blast and massively reduces health by 3 times!" << endl;
+            ability = true;
+            abilitycount--;
+        }
+        else {
+            cout << "Ability count exceeded, cannot be used further (3 times allowed)!" << endl;
+        }
+    }
+};
+
+class Arena {
+public:
+    string name;
+    enum environment { fire, ice, jungle };
+    environment env;
+    Character* arr[10];
+    int participants;
+
+    Arena(string n, environment e) : name(n), env(e), participants(0) {}
+
+    void addcharacter(Character* c) {
+        if (participants < 10) {
+            arr[participants] = c;
+            participants++;
+        }
+        else {
+            cout << "Participants limit exceed in the arena new players can't be added !" << endl;
+        }
+    }
+
+    void applyenvironmenteffects() {
+        for (int i = 0; i < participants; i++) {
+            if (arr[i]->hasAppliedBuffs) {
+                cout << arr[i]->getname() << "'s environment effects have already been applied." << endl;
+                continue;
+            }
+
+            if (env == fire) {
+                cout << arr[i]->getname() << " is fighting in the fire environment! The health reduced by 10 " << endl;
+                arr[i]->sethealth(arr[i]->gethealth() - 10);
+            }
+            else if (env == ice) {
+                cout << arr[i]->getname() << " is fighting in the ICE environment! The Attack increases by 10 " << endl;
+                arr[i]->setattack(arr[i]->getattack() + 10);
+            }
+            else if (env == jungle) {
+                cout << arr[i]->getname() << " is fighting in the Competitive Jungle environment! The health and attack increases by 10" << endl;
+                arr[i]->sethealth(arr[i]->gethealth() + 10);
+                arr[i]->setattack(arr[i]->getattack() + 10);
+            }
+            else {
+                cout << "INVALID ENVIRONMENT !" << endl;
+                continue;
+            }
+
+            arr[i]->hasAppliedBuffs = true;
+        }
+    }
+
+    void resetBuffsForAll() {
+        for (int i = 0; i < participants; i++) {
+            arr[i]->resetBuffs();
+        }
+    }
+
+    void displayarenadetails() {
+        cout << "Arena Details !" << endl;
+        cout << "Arena Name: " << name << endl;
+        cout << "Arena Environment: ";
+        if (env == fire) cout << "FIRE";
+        else if (env == ice) cout << "ICE";
+        else if (env == jungle) cout << "JUNGLE";
+        cout << endl;
+        cout << "Participants: " << participants << endl;
+        cout << "Characters: " << endl;
+        for (int i = 0; i < participants; i++) {
+            cout << "Character " << i + 1 << ": " << arr[i]->getname() << endl;
+        }
+    }
+
+    // Get character
+    Character* getCharacter(int index) {
+        if (index >= 0 && index < participants) {
+            return arr[index];
+        }
+        return nullptr;
+    }
+
+    // Get participants
+    int getParticipants() {
+        return participants;
+    }
+
+    // Get arena name
+    string getName() {
+        return name;
+    }
+};
+
+class GameManager {
+private:
+    Arena* arenas[3];
+    Character* characters[3];
+    int arenaCount;
+    int characterCount;
+
+
+    struct BattleRecord {
+        string winner;
+        string loser;
+        string arenaName;
+        bool isValid;
+
+        BattleRecord() : winner(""), loser(""), arenaName(""), isValid(false) {}
+    };
+
+    BattleRecord battleHistory[50];
+    int battleHistoryCount;
+
+public:
+    GameManager() : arenaCount(0), characterCount(0), battleHistoryCount(0) {
+
+        characters[0] = new Warrior("Warrior", 5, 100, 30, 20);
+        characters[1] = new Mage("Mage", 5, 100, 20, 30);
+        characters[2] = new Archer("Archer", 5, 100, 25, 15);
+        characterCount = 3;
+
+
+        arenas[0] = new Arena("Fire Arena", Arena::fire);
+        arenas[1] = new Arena("Ice Arena", Arena::ice);
+        arenas[2] = new Arena("Jungle Arena", Arena::jungle);
+        arenaCount = 3;
+
+        cout << "Game initialized with 3 characters and 3 arenas." << endl;
+    }
+
+    ~GameManager() {
+
+        for (int i = 0; i < characterCount; i++) {
+            delete characters[i];
+        }
+        for (int i = 0; i < arenaCount; i++) {
+            delete arenas[i];
+        }
+    }
+
+
+    void displayAllCharacters() {
+        cout << "\n=== All Characters ===" << endl;
+        for (int i = 0; i < characterCount; i++) {
+            cout << i + 1 << ". " << characters[i]->getname() << " (Level " << characters[i]->getlevel() << ")" << endl;
+        }
+    }
+
+
+    void displayAllArenas() {
+        cout << "\n=== All Arenas ===" << endl;
+        for (int i = 0; i < arenaCount; i++) {
+            cout << i + 1 << ". " << arenas[i]->getName() << " (Participants: " << arenas[i]->getParticipants() << ")" << endl;
+        }
+    }
+
+
+    void assignCharacterToArena(int characterIndex, int arenaIndex) {
+        if (characterIndex >= 0 && characterIndex < characterCount &&
+            arenaIndex >= 0 && arenaIndex < arenaCount) {
+
+            arenas[arenaIndex]->addcharacter(characters[characterIndex]);
+            cout << characters[characterIndex]->getname() << " assigned to " << arenas[arenaIndex]->getName() << endl;
+        }
+        else {
+            cout << "Invalid character or arena index!" << endl;
+        }
+    }
+
+
+    void startBattle(int arenaIndex, int char1Index, int char2Index) {
+        if (arenaIndex < 0 || arenaIndex >= arenaCount) {
+            cout << "Invalid arena index!" << endl;
+            return;
+        }
+
+        Arena* arena = arenas[arenaIndex];
+        if (char1Index < 0 || char1Index >= arena->getParticipants() ||
+            char2Index < 0 || char2Index >= arena->getParticipants()) {
+            cout << "Invalid character indices for this arena!" << endl;
+            return;
+        }
+
+        Character* char1 = arena->getCharacter(char1Index);
+        Character* char2 = arena->getCharacter(char2Index);
+
+        if (char1->gethealth() <= 0 || char2->gethealth() <= 0) {
+            cout << "One or both characters have no health left!" << endl;
+            return;
+        }
+
+        cout << "\n===== BATTLE BEGINS: " << char1->getname() << " VS " << char2->getname() << " in " << arena->getName() << " =====\n" << endl;
+
+        // Apply environment effects
+        arena->applyenvironmenteffects();
+
+
+        int turn = 1;
+        bool battleEnded = false;
+        Character* winner = nullptr;
+        Character* loser = nullptr;
+
+        while (!battleEnded) {
+            cout << "\n----- Turn " << turn << " -----" << endl;
+
+
+            if (char1->gethealth() > 0) {
+                cout << char1->getname() << "'s turn:" << endl;
+
+
+                if (rand() % 100 < 30) {
+                    char1->useSpecialAbility();
+                }
+
+                char1->attackTarget(*char2);
+
+                if (char2->gethealth() <= 0) {
+                    winner = char1;
+                    loser = char2;
+                    battleEnded = true;
+                    continue;
+                }
+            }
+
+
+            if (char2->gethealth() > 0) {
+                cout << char2->getname() << "'s turn:" << endl;
+
+
+                if (rand() % 100 < 30) {
+                    char2->useSpecialAbility();
+                }
+
+                char2->attackTarget(*char1);
+
+                if (char1->gethealth() <= 0) {
+                    winner = char2;
+                    loser = char1;
+                    battleEnded = true;
+                }
+            }
+
+            turn++;
+
+            // prevent infinite battles
+            if (turn > 20) {
+                cout << "Battle has gone on too long! It's a draw!" << endl;
+                battleEnded = true;
+            }
+        }
+
+        // Display battle results
+        if (winner && loser) {
+            cout << "\n===== BATTLE ENDED =====\n" << endl;
+            cout << winner->getname() << " has defeated " << loser->getname() << "!" << endl;
+
+            // Add to battle history
+            if (battleHistoryCount < 50) {
+                battleHistory[battleHistoryCount].winner = winner->getname();
+                battleHistory[battleHistoryCount].loser = loser->getname();
+                battleHistory[battleHistoryCount].arenaName = arena->getName();
+                battleHistory[battleHistoryCount].isValid = true;
+                battleHistoryCount++;
+            }
+        }
+
+        // Reset environment buffs after battle
+        arena->resetBuffsForAll();
+    }
+
+    // Display battle history
+    void displayBattleHistory() {
+        cout << "\n===== BATTLE HISTORY =====\n" << endl;
+
+        if (battleHistoryCount == 0) {
+            cout << "No battles have been recorded yet." << endl;
+            return;
+        }
+
+        for (int i = 0; i < battleHistoryCount; i++) {
+            if (battleHistory[i].isValid) {
+                cout << i + 1 << ". " << battleHistory[i].winner << " defeated " << battleHistory[i].loser
+                    << " in " << battleHistory[i].arenaName << endl;
+            }
+        }
+    }
+
+    // Execute a combo attack (using operator overloading)
+    void executeComboAttack(int arenaIndex, int char1Index, int char2Index, int targetIndex) {
+        if (arenaIndex < 0 || arenaIndex >= arenaCount) {
+            cout << "Invalid arena index!" << endl;
+            return;
+        }
+
+        Arena* arena = arenas[arenaIndex];
+        if (char1Index < 0 || char1Index >= arena->getParticipants() ||
+            char2Index < 0 || char2Index >= arena->getParticipants() ||
+            targetIndex < 0 || targetIndex >= arena->getParticipants()) {
+            cout << "Invalid character indices for this arena!" << endl;
+            return;
+        }
+
+        Character* char1 = arena->getCharacter(char1Index);
+        Character* char2 = arena->getCharacter(char2Index);
+        Character* target = arena->getCharacter(targetIndex);
+
+        if (char1->gethealth() <= 0 || char2->gethealth() <= 0 || target->gethealth() <= 0) {
+            cout << "One or more characters have no health left!" << endl;
+            return;
+        }
+
+        // Calculate combo attack damage using operator overloading
+        int comboAttack = *char1 + *char2;
+        cout << "\n===== COMBO ATTACK =====\n" << endl;
+        cout << char1->getname() << " and " << char2->getname() << " perform a combo attack on " << target->getname() << "!" << endl;
+        cout << "Combined attack power: " << comboAttack << endl;
+
+        // Apply combo damage
+        int targetHealth = target->gethealth() - comboAttack;
+        if (targetHealth < 0) targetHealth = 0;
+        target->sethealth(targetHealth);
+
+        cout << target->getname() << "'s health reduced to " << target->gethealth() << endl;
+
+        if (target->gethealth() <= 0) {
+            cout << target->getname() << " has been defeated by the combo attack!" << endl;
+        }
+    }
+
+
+    void compareCharacters(int char1Index, int char2Index) {
+        if (char1Index < 0 || char1Index >= characterCount ||
+            char2Index < 0 || char2Index >= characterCount) {
+            cout << "Invalid character indices!" << endl;
+            return;
+        }
+
+        Character* char1 = characters[char1Index];
+        Character* char2 = characters[char2Index];
+
+        cout << "\n===== CHARACTER COMPARISON =====\n" << endl;
+        cout << "Comparing " << char1->getname() << " and " << char2->getname() << ":" << endl;
+
+
+        cout << *char1 << endl;
+        cout << *char2 << endl;
+
+
+        if (*char1 == *char2) {
+            cout << "The characters have equal power levels!" << endl;
+        }
+        else {
+            cout << "The characters have different power levels!" << endl;
+        }
+    }
+
+
+    void restoreAllCharacters() {
+        for (int i = 0; i < characterCount; i++) {
+
+            characters[i]->sethealth(100);
+        }
+        cout << "All characters' health has been restored to 100." << endl;
+    }
+
+
+    void runGameMenu() {
+        int choice = 0;
+
+        while (choice != 7) {
+            cout << "\n===== FANTASY ARENA GAME MENU =====\n" << endl;
+            cout << "1. Display all characters and arenas" << endl;
+            cout << "2. Assign character to arena" << endl;
+            cout << "3. Start a battle" << endl;
+            cout << "4. Execute a combo attack" << endl;
+            cout << "5. Compare characters" << endl;
+            cout << "6. Display battle history" << endl;
+            cout << "7. Exit game" << endl;
+            cout << "8. Restore all characters' health" << endl;
+            cout << "\nEnter your choice: ";
+            cin >> choice;
+
+            switch (choice) {
+            case 1: {
+                displayAllCharacters();
+                displayAllArenas();
+                break;
+            }
+            case 2: {
+                int charIndex, arenaIndex;
+
+                displayAllCharacters();
+                cout << "Select character index: ";
+                cin >> charIndex;
+                charIndex--;
+
+                displayAllArenas();
+                cout << "Select arena index: ";
+                cin >> arenaIndex;
+                arenaIndex--;
+
+                assignCharacterToArena(charIndex, arenaIndex);
+                break;
+            }
+            case 3: {
+                int arenaIndex, char1Index, char2Index;
+
+                displayAllArenas();
+                cout << "Select arena index: ";
+                cin >> arenaIndex;
+                arenaIndex--; // Adjust for 0-based indexing
+
+                if (arenaIndex >= 0 && arenaIndex < arenaCount) {
+                    cout << "Characters in this arena:" << endl;
+                    for (int i = 0; i < arenas[arenaIndex]->getParticipants(); i++) {
+                        Character* c = arenas[arenaIndex]->getCharacter(i);
+                        cout << i + 1 << ". " << c->getname() << " (Health: " << c->gethealth() << ")" << endl;
+                    }
+
+                    cout << "Select first character index: ";
+                    cin >> char1Index;
+                    char1Index--; // Adjust for 0-based indexing
+
+                    cout << "Select second character index: ";
+                    cin >> char2Index;
+                    char2Index--; // Adjust for 0-based indexing
+
+                    startBattle(arenaIndex, char1Index, char2Index);
+                }
+                else {
+                    cout << "Invalid arena index!" << endl;
+                }
+                break;
+            }
+            case 4: {
+                int arenaIndex, char1Index, char2Index, targetIndex;
+
+                displayAllArenas();
+                cout << "Select arena index: ";
+                cin >> arenaIndex;
+                arenaIndex--; // Adjust for 0-based indexing
+
+                if (arenaIndex >= 0 && arenaIndex < arenaCount) {
+                    cout << "Characters in this arena:" << endl;
+                    for (int i = 0; i < arenas[arenaIndex]->getParticipants(); i++) {
+                        Character* c = arenas[arenaIndex]->getCharacter(i);
+                        cout << i + 1 << ". " << c->getname() << " (Health: " << c->gethealth() << ")" << endl;
+                    }
+
+                    cout << "Select first attacker index: ";
+                    cin >> char1Index;
+                    char1Index--; // Adjust for 0-based indexing
+
+                    cout << "Select second attacker index: ";
+                    cin >> char2Index;
+                    char2Index--; // Adjust for 0-based indexing
+
+                    cout << "Select target index: ";
+                    cin >> targetIndex;
+                    targetIndex--; // Adjust for 0-based indexing
+
+                    executeComboAttack(arenaIndex, char1Index, char2Index, targetIndex);
+                }
+                else {
+                    cout << "Invalid arena index!" << endl;
+                }
+                break;
+            }
+            case 5: {
+                int char1Index, char2Index;
+
+                displayAllCharacters();
+                cout << "Select first character index: ";
+                cin >> char1Index;
+                char1Index--; // Adjust for 0-based indexing
+
+                cout << "Select second character index: ";
+                cin >> char2Index;
+                char2Index--; // Adjust for 0-based indexing
+
+                compareCharacters(char1Index, char2Index);
+                break;
+            }
+            case 6:
+                displayBattleHistory();
+                break;
+            case 7:
+                cout << "Thank you for playing Fantasy Arena!" << endl;
+                break;
+            case 8:
+                restoreAllCharacters();
+                break;
+            default:
+                cout << "Invalid choice! Please try again." << endl;
+                break;
+            }
+        }
+    }
+};
+
+int main() {
+    srand(time(0));
+
+    GameManager gameManager;
+
+    gameManager.runGameMenu();
+
+    return 0;
+}
