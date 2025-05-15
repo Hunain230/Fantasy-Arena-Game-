@@ -51,21 +51,20 @@ public:
         hasAppliedBuffs = false;
     }
 
-    // Operator overloading
-    // +
+   
 
     friend int operator+(const Character& c1, const Character& c2) {
         return c1.attack + c2.attack;
     }
 
-    // == operator to compare two characters 
+ 
     friend bool operator==(const Character& c1, const Character& c2) {
         int power1 = c1.health + c1.attack + c1.defense + (c1.level * 10);
         int power2 = c2.health + c2.attack + c2.defense + (c2.level * 10);
         return power1 == power2;
     }
 
-    // << operator to print detailed character stats using ostream
+   
     friend ostream& operator<<(ostream& os, const Character& c) {
         os << "Character: " << c.name << endl;
         os << "Level: " << c.level << endl;
@@ -262,7 +261,7 @@ public:
         }
     }
 
-    // Get character
+    
     Character* getCharacter(int index) {
         if (index >= 0 && index < participants) {
             return arr[index];
@@ -270,12 +269,12 @@ public:
         return nullptr;
     }
 
-    // Get participants
+    
     int getParticipants() {
         return participants;
     }
 
-    // Get arena name
+    
     string getName() {
         return name;
     }
@@ -381,7 +380,7 @@ public:
 
         cout << "\n===== BATTLE BEGINS: " << char1->getname() << " VS " << char2->getname() << " in " << arena->getName() << " =====\n" << endl;
 
-        // Apply environment effects
+        
         arena->applyenvironmenteffects();
 
 
@@ -432,19 +431,19 @@ public:
 
             turn++;
 
-            // prevent infinite battles
+            // prenvent battles 
             if (turn > 20) {
                 cout << "Battle has gone on too long! It's a draw!" << endl;
                 battleEnded = true;
             }
         }
 
-        // Display battle results
+        
         if (winner && loser) {
             cout << "\n===== BATTLE ENDED =====\n" << endl;
             cout << winner->getname() << " has defeated " << loser->getname() << "!" << endl;
 
-            // Add to battle history
+            
             if (battleHistoryCount < 50) {
                 battleHistory[battleHistoryCount].winner = winner->getname();
                 battleHistory[battleHistoryCount].loser = loser->getname();
@@ -454,11 +453,11 @@ public:
             }
         }
 
-        // Reset environment buffs after battle
+
         arena->resetBuffsForAll();
     }
 
-    // Display battle history
+    
     void displayBattleHistory() {
         cout << "\n===== BATTLE HISTORY =====\n" << endl;
 
@@ -475,7 +474,7 @@ public:
         }
     }
 
-    // Execute a combo attack (using operator overloading)
+    
     void executeComboAttack(int arenaIndex, int char1Index, int char2Index, int targetIndex) {
         if (arenaIndex < 0 || arenaIndex >= arenaCount) {
             cout << "Invalid arena index!" << endl;
@@ -499,13 +498,13 @@ public:
             return;
         }
 
-        // Calculate combo attack damage using operator overloading
+        
         int comboAttack = *char1 + *char2;
         cout << "\n===== COMBO ATTACK =====\n" << endl;
         cout << char1->getname() << " and " << char2->getname() << " perform a combo attack on " << target->getname() << "!" << endl;
         cout << "Combined attack power: " << comboAttack << endl;
 
-        // Apply combo damage
+       
         int targetHealth = target->gethealth() - comboAttack;
         if (targetHealth < 0) targetHealth = 0;
         target->sethealth(targetHealth);
@@ -639,15 +638,15 @@ public:
 
                     cout << "Select first attacker index: ";
                     cin >> char1Index;
-                    char1Index--; // Adjust for 0-based indexing
+                    char1Index--;
 
                     cout << "Select second attacker index: ";
                     cin >> char2Index;
-                    char2Index--; // Adjust for 0-based indexing
+                    char2Index--; 
 
                     cout << "Select target index: ";
                     cin >> targetIndex;
-                    targetIndex--; // Adjust for 0-based indexing
+                    targetIndex--; 
 
                     executeComboAttack(arenaIndex, char1Index, char2Index, targetIndex);
                 }
@@ -662,11 +661,11 @@ public:
                 displayAllCharacters();
                 cout << "Select first character index: ";
                 cin >> char1Index;
-                char1Index--; // Adjust for 0-based indexing
+                char1Index--; 
 
                 cout << "Select second character index: ";
                 cin >> char2Index;
-                char2Index--; // Adjust for 0-based indexing
+                char2Index--; 
 
                 compareCharacters(char1Index, char2Index);
                 break;
